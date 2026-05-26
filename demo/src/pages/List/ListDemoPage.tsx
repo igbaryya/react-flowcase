@@ -74,14 +74,14 @@ export function ListDemoPage() {
 
     return (
         <DemoPageShell
-            title="Lists, multi-match & custom cursor"
+            title="Lists & multi-match"
             description={
                 <>
                     The class <code>.todo-toggle</code> matches every checkbox
                     in the list. We use <code>index</code> on each step to
-                    pick exactly which one to click. The cursor is a purple
-                    arrow loaded from an inline SVG data URL — editable live
-                    from the gear &rarr; Overall tab.
+                    pick exactly which one to click. A purple data-URL cursor
+                    is set via <code>appearance</code> — see the Custom cursors
+                    demo for more variants.
                 </>
             }
             flowState={flowState}

@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { AssertionsDemoPage } from './pages/Assertions/AssertionsDemoPage';
 import { AsyncDemoPage } from './pages/Async/AsyncDemoPage';
+import { CustomCursorDemoPage } from './pages/CustomCursor/CustomCursorDemoPage';
 import { FormDemoPage } from './pages/Form/FormDemoPage';
 import { HomePage } from './pages/Home/HomePage';
 import { HoverDemoPage } from './pages/Hover/HoverDemoPage';
@@ -65,16 +66,23 @@ const PAGES: DemoPage[] = [
     },
     {
         id: 'list',
-        label: 'Lists & custom cursor',
+        label: 'Lists & multi-match',
         section: 'demos',
         number: 3,
         Component: ListDemoPage,
     },
     {
+        id: 'custom-cursor',
+        label: 'Custom cursors',
+        section: 'demos',
+        number: 4,
+        Component: CustomCursorDemoPage,
+    },
+    {
         id: 'login',
         label: 'Stateful · survives refresh',
         section: 'demos',
-        number: 4,
+        number: 5,
         Component: LoginDemoPage,
     },
     {

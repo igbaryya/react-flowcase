@@ -148,8 +148,8 @@ const PILLARS: Pillar[] = [
         description:
             'Tween motion to selectors, refs, or coordinates. Show on flow start, hide on end, swap appearance from config.',
         icon: <CursorIcon />,
-        demoId: 'list',
-        demoLabel: 'Lists & custom cursor',
+        demoId: 'custom-cursor',
+        demoLabel: 'Custom cursors',
     },
     {
         title: 'Await what you click',
@@ -200,15 +200,24 @@ const DEMO_CATALOG: DemoCard[] = [
     {
         id: 'list',
         step: '03',
-        title: 'Lists & custom cursor',
+        title: 'Lists & multi-match',
         description:
-            'Multi-match index picking and a themed cursor via SVG data URL — editable live.',
-        badge: 'multi-match · appearance',
+            'Class selectors with index to pick one row; awaitable handler keyed by DOM element.',
+        badge: 'multi-match · index',
+        category: 'core',
+    },
+    {
+        id: 'custom-cursor',
+        step: '04',
+        title: 'Custom cursors',
+        description:
+            'Local /public SVGs, ReactNode render props, external URLs, plus visibility and size.',
+        badge: 'appearance · ReactNode · settings',
         category: 'core',
     },
     {
         id: 'login',
-        step: '04',
+        step: '05',
         title: 'Stateful flows that survive refresh',
         description:
             'Sign-in crosses navigation, hydrates on dashboard, resumes after manual reload.',

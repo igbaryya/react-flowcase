@@ -5,6 +5,7 @@ import {
     VirtualCursor,
     describeStep,
     generateFullExample,
+    type CursorSource,
 } from 'react-flowcase';
 import { CodeBlock } from './CodeBlock';
 import { ConceptCallout } from './ConceptCallout';
@@ -52,6 +53,13 @@ export interface DemoPageShellProps {
      */
     pageOutcome?: ReactNode;
     flowResultExtra?: ReactNode;
+    /**
+     * Override `VirtualCursor` visual (ReactNode / render fn). When omitted,
+     * uses `cursor.appearance` from the hook (image URL / data URL).
+     */
+    cursorVisual?: CursorSource;
+    /** Pixel size passed to `VirtualCursor` (default 28). */
+    cursorSize?: number;
 }
 
 export function DemoPageShell({
@@ -63,6 +71,8 @@ export function DemoPageShell({
     children,
     pageOutcome,
     flowResultExtra,
+    cursorVisual,
+    cursorSize,
 }: DemoPageShellProps) {
     const {
         cursor,
@@ -265,7 +275,8 @@ export function DemoPageShell({
             <VirtualCursor
                 position={cursor.position}
                 visible={cursor.visible}
-                cursor={cursor.appearance}
+                cursor={cursorVisual ?? cursor.appearance}
+                size={cursorSize}
                 loading={cursorLoading}
             />
         </div>
