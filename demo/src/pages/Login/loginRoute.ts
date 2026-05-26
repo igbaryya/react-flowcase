@@ -1,4 +1,5 @@
-export const LOGIN_AUTOMATION_PATH = '/loginAutomation';
+const BASE = import.meta.env.BASE_URL;
+const LOGIN_AUTOMATION_SEGMENT = 'loginAutomation';
 
 export interface LoginSession {
     email: string;
@@ -8,7 +9,8 @@ export interface LoginSession {
 const SESSION_KEY = 'login-demo-session';
 
 export function isLoginAutomationPath(pathname = window.location.pathname): boolean {
-    return pathname === LOGIN_AUTOMATION_PATH;
+    return pathname === `${BASE}${LOGIN_AUTOMATION_SEGMENT}` || 
+           pathname === `${BASE}${LOGIN_AUTOMATION_SEGMENT}/`;
 }
 
 export function getLoginPageParam(
@@ -18,9 +20,8 @@ export function getLoginPageParam(
 }
 
 export function loginAutomationHref(page?: 'dashboard'): string {
-    return page === 'dashboard'
-        ? `${LOGIN_AUTOMATION_PATH}?page=dashboard`
-        : LOGIN_AUTOMATION_PATH;
+    const path = `${BASE}${LOGIN_AUTOMATION_SEGMENT}`;
+    return page === 'dashboard' ? `${path}?page=dashboard` : path;
 }
 
 export function saveLoginSession(email: string): void {

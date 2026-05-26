@@ -1,15 +1,30 @@
 name: Publish Library to npm
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
+    paths:
+      - 'react-flowcase/**'
+      - '!react-flowcase/package.json'
   workflow_dispatch:
     inputs:
       dry_run:
         description: 'Dry run (no actual publish)'
         required: false
-        default: 'true'
+        default: false
         type: boolean
+      version_bump:
+        description: 'Version bump type'
+        required: false
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
 
 jobs:
   publish:
@@ -19,6 +34,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -40,13 +57,32 @@ jobs:
         run: npm publish -w react-flowcase --dry-run
 
       - name: Verify npm token
-        if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == false) }}
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run == false }}
         run: |
           if [ -z "$NODE_AUTH_TOKEN" ]; then
             echo "::error::NPM_TOKEN secret is missing. Add it under Settings → Secrets and variables → Actions."
             exit 1
           fi
 
+      - name: Bump version
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run == false }}
+        id: version
+        working-directory: react-flowcase
+        run: |
+          BUMP_TYPE="${{ inputs.version_bump || 'patch' }}"
+          NEW_VERSION=$(npm version $BUMP_TYPE --no-git-tag-version)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Bumped to $NEW_VERSION"
+
       - name: Publish to npm
-        if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == false) }}
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run == false }}
         run: npm publish -w react-flowcase --access public
+
+      - name: Commit and push version bump
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run == false }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add react-flowcase/package.json
+          git commit -m "chore: bump react-flowcase to ${{ steps.version.outputs.new_version }} [skip ci]"
+          git push

@@ -248,10 +248,12 @@ function resolveActiveIdFromLocation(): string {
     return 'home';
 }
 
+const BASE = import.meta.env.BASE_URL;
+
 function hrefForDemo(id: string): string {
-    if (id === 'login') return '/loginAutomation';
-    if (id === 'home') return '/';
-    return `/?${DEMO_QUERY_KEY}=${id}`;
+    if (id === 'login') return `${BASE}loginAutomation`;
+    if (id === 'home') return BASE;
+    return `${BASE}?${DEMO_QUERY_KEY}=${id}`;
 }
 
 export default function App() {

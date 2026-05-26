@@ -7,7 +7,7 @@ import {
     type SetStateAction,
 } from 'react';
 
-const DEMO_CURSOR_SRC = '/demo-cursor.svg';
+const DEMO_CURSOR_SRC = `${import.meta.env.BASE_URL}demo-cursor.svg`;
 
 const HERO_FLOW_STEPS = [
     { type: 'input', target: '#email', detail: 'ada@example.com' },

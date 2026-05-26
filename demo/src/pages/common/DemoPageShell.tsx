@@ -10,6 +10,7 @@ import {
 import { CodeBlock } from './CodeBlock';
 import { ConceptCallout } from './ConceptCallout';
 import { DemoPageHeader } from './DemoPageHeader';
+import { PlayIcon, StopIcon } from './icons';
 import type { useDemoFlow } from './useDemoFlow';
 import './demo-page.css';
 
@@ -208,7 +209,17 @@ export function DemoPageShell({
             ) : null}
 
             <div className="demo-page-playground">
-                <div className="demo-page-form">{resolvedChildren}</div>
+                <div className="demo-page-form">
+                    {resolvedChildren}
+                    <button
+                        type="button"
+                        className={`demo-run-btn ${running ? 'demo-run-btn--stop' : ''}`}
+                        onClick={running ? cancel : startAutomation}
+                    >
+                        {running ? <StopIcon /> : <PlayIcon />}
+                        <span>{running ? 'Stop' : 'Run Flow'}</span>
+                    </button>
+                </div>
 
                 <aside className="demo-page-aside">
                     <div className="demo-card indicator-card">

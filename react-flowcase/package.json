@@ -51,5 +51,13 @@
         "demo",
         "e2e"
     ],
-    "license": "MIT"
+    "license": "MIT",
+    "homepage": "https://igbaryya.github.io/react-flowcase/",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/igbaryya/react-flowcase.git"
+    },
+    "bugs": {
+        "url": "https://github.com/igbaryya/react-flowcase/issues"
+    }
 }

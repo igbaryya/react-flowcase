@@ -455,3 +455,64 @@
         opacity: 0.6;
     }
 }
+
+.demo-run-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(88, 200, 123, 0.1);
+    border: 1px solid rgba(88, 200, 123, 0.4);
+    color: var(--success);
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        color 0.15s,
+        background 0.15s,
+        border-color 0.15s,
+        transform 0.1s;
+    align-self: flex-start;
+}
+
+.demo-run-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.demo-run-btn:hover {
+    color: #0a0c11;
+    background: var(--success);
+    border-color: var(--success);
+    transform: translateY(-1px);
+}
+
+.demo-run-btn:active {
+    transform: translateY(0);
+}
+
+.demo-run-btn--stop {
+    background: rgba(239, 91, 107, 0.1);
+    border-color: rgba(239, 91, 107, 0.45);
+    color: var(--danger);
+    animation: demo-run-btn-pulse 1.5s ease-in-out infinite;
+}
+
+.demo-run-btn--stop:hover {
+    color: #0a0c11;
+    background: var(--danger);
+    border-color: var(--danger);
+}
+
+@keyframes demo-run-btn-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 91, 107, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(239, 91, 107, 0);
+    }
+}
