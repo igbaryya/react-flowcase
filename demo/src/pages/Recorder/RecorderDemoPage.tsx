@@ -319,7 +319,11 @@ export function RecorderDemoPage() {
                             interact with the form above.
                         </div>
                     ) : (
-                        <CodeBlock code={code} language="ts" />
+                        <CodeBlock
+                            code={code}
+                            language="ts"
+                            filename="recorded-flow.ts"
+                        />
                     )}
                 </div>
             </div>

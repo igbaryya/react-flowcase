@@ -1,22 +1,35 @@
-import { Fragment, useState } from 'react';
+import { useRef, useState } from 'react';
 import type {
     CSSProperties,
     DragEvent as ReactDragEvent,
     ChangeEvent,
+    ReactNode,
 } from 'react';
 import type { UseVirtualCursorOptions } from '../cursor/useVirtualCursor';
-import { PropCell, type PropValueKind } from './PropEditor';
+import { PropCell, type MsSliderConfig, type PropValueKind, type PropValueType } from './PropEditor';
+import { PropHelpTooltip } from './PropHelpTooltip';
 import {
     CURSOR_OPTIONS_SCHEMA,
     RUN_OPTIONS_SCHEMA,
     STEP_SCHEMAS,
     STEP_TYPES,
     createDefaultStep,
+    type JsonObjectEditorConfig,
     type StepType,
 } from './stepDefaults';
 import { describeStep, type FlowRunOptions, type FlowStep } from './types';
 
 export type ConfigTabId = 'overall' | 'flow' | 'runOptions';
+
+export type FlowEditMode = 'form' | 'json';
+
+export interface FlowJsonEditorRenderProps {
+    flow: FlowStep[];
+    editable: boolean;
+    onChange: (next: FlowStep[]) => void;
+    /** Called by the JSON editor to register an apply-before-unmount hook. */
+    registerFlush?: (flush: (() => void) | null) => void;
+}
 
 export interface FlowConfigViewerProps {
     /** The flow definition to visualize. */
@@ -44,6 +57,11 @@ export interface FlowConfigViewerProps {
     className?: string;
     /** Override or extend the root element's inline styles. */
     style?: CSSProperties;
+    /**
+     * When set, the Flow tab shows a Form | JSON toggle. JSON mode renders
+     * this slot (e.g. Monaco in the demo app).
+     */
+    renderFlowJsonEditor?: (props: FlowJsonEditorRenderProps) => ReactNode;
 }
 
 const STEP_COLORS: Record<
@@ -134,26 +152,27 @@ const styles = {
     } as CSSProperties,
     tabStrip: {
         display: 'flex',
-        gap: 2,
-        borderBottom: '1px solid rgba(127, 127, 127, 0.2)',
-        marginBottom: 4,
+        gap: 4,
+        padding: 4,
+        background: 'rgba(0, 0, 0, 0.2)',
+        borderRadius: 10,
+        marginBottom: 8,
     } as CSSProperties,
     tab: (active: boolean): CSSProperties => ({
-        background: 'transparent',
-        border: 'none',
-        borderBottom: active
-            ? '2px solid #6aa9ff'
-            : '2px solid transparent',
+        background: active ? 'rgba(106, 169, 255, 0.15)' : 'transparent',
+        border: active
+            ? '1px solid rgba(106, 169, 255, 0.35)'
+            : '1px solid transparent',
+        borderRadius: 7,
         color: active ? '#6aa9ff' : 'inherit',
-        opacity: active ? 1 : 0.55,
-        padding: '8px 14px',
+        opacity: active ? 1 : 0.6,
+        padding: '7px 14px',
         fontSize: 11,
         fontWeight: 600,
         cursor: 'pointer',
         fontFamily: 'inherit',
         textTransform: 'uppercase',
-        letterSpacing: '0.06em',
-        marginBottom: -1,
+        letterSpacing: '0.05em',
     }),
     pane: {
         display: 'flex',
@@ -239,17 +258,25 @@ const styles = {
         lineHeight: 1,
     } as CSSProperties,
     propsGrid: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        minWidth: 0,
+    } as CSSProperties,
+    propRow: {
         display: 'grid',
-        gridTemplateColumns: '110px 1fr',
-        rowGap: 6,
-        columnGap: 8,
-        fontSize: 11,
-        lineHeight: 1.5,
+        gridTemplateColumns: 'minmax(88px, 110px) minmax(0, 1fr)',
+        gap: '6px 12px',
+        alignItems: 'center',
         minWidth: 0,
     } as CSSProperties,
     propKey: {
-        opacity: 0.55,
-        alignSelf: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        opacity: 0.65,
+        fontSize: 11,
+        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
     } as CSSProperties,
     propValue: {
         fontFamily: 'inherit',
@@ -303,6 +330,42 @@ const styles = {
         fontWeight: 600,
         cursor: 'pointer',
     } as CSSProperties,
+    flowEditModeBar: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 8,
+        flexWrap: 'wrap',
+    } as CSSProperties,
+    flowEditModeToggle: {
+        display: 'inline-flex',
+        gap: 2,
+        padding: 3,
+        background: 'rgba(0, 0, 0, 0.2)',
+        borderRadius: 8,
+    } as CSSProperties,
+    flowEditModeBtn: (active: boolean): CSSProperties => ({
+        background: active ? 'rgba(106, 169, 255, 0.18)' : 'transparent',
+        border: active
+            ? '1px solid rgba(106, 169, 255, 0.45)'
+            : '1px solid transparent',
+        borderRadius: 6,
+        color: active ? '#6aa9ff' : 'inherit',
+        opacity: active ? 1 : 0.65,
+        padding: '5px 12px',
+        fontSize: 10,
+        fontWeight: 600,
+        cursor: 'pointer',
+        fontFamily: 'inherit',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+    }),
+    flowEditModeHint: {
+        fontSize: 10,
+        opacity: 0.45,
+        fontFamily:
+            'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
+    } as CSSProperties,
 };
 
 function summarize(flow: FlowStep[]): string {
@@ -329,8 +392,12 @@ function summarize(flow: FlowStep[]): string {
 interface PropsGridEntry {
     key: string;
     value: unknown;
+    description?: string;
+    valueType?: PropValueType;
     enumValues?: ReadonlyArray<string>;
     valueKinds?: ReadonlyArray<PropValueKind>;
+    msSlider?: MsSliderConfig;
+    jsonObject?: JsonObjectEditorConfig;
 }
 
 function getStepEntries(
@@ -342,13 +409,29 @@ function getStepEntries(
         return STEP_SCHEMAS[step.type].map((schema) => ({
             key: schema.key,
             value: stepRecord[schema.key],
+            description: schema.description,
+            valueType: schema.valueType,
             enumValues: schema.enumValues,
             valueKinds: schema.valueKinds,
+            msSlider: schema.msSlider,
+            jsonObject: schema.jsonObject,
         }));
     }
     return Object.entries(step)
         .filter(([k]) => k !== 'type')
-        .map(([k, v]) => ({ key: k, value: v }));
+        .map(([k, v]) => {
+            const meta = STEP_SCHEMAS[step.type].find((s) => s.key === k);
+            return {
+                key: k,
+                value: v,
+                description: meta?.description,
+                valueType: meta?.valueType,
+                enumValues: meta?.enumValues,
+                valueKinds: meta?.valueKinds,
+                msSlider: meta?.msSlider,
+                jsonObject: meta?.jsonObject,
+            };
+        });
 }
 
 function patchRecord(
@@ -393,27 +476,62 @@ function moveItem<T>(arr: T[], from: number, to: number): T[] {
 interface PropsGridProps {
     entries: PropsGridEntry[];
     editable: boolean;
+    idPrefix?: string;
     onPropChange?: (key: string, value: unknown) => void;
 }
 
-function PropsGrid({ entries, editable, onPropChange }: PropsGridProps) {
+function PropsGrid({
+    entries,
+    editable,
+    idPrefix = '',
+    onPropChange,
+}: PropsGridProps) {
     if (entries.length === 0) return null;
     return (
         <div style={styles.propsGrid}>
-            {entries.map(({ key, value, enumValues, valueKinds }) => (
-                <Fragment key={key}>
-                    <span style={styles.propKey}>{key}</span>
-                    <span style={styles.propValue}>
-                        <PropCell
-                            value={value}
-                            editable={editable}
-                            enumValues={enumValues}
-                            valueKinds={valueKinds}
-                            onChange={(next) => onPropChange?.(key, next)}
-                        />
-                    </span>
-                </Fragment>
-            ))}
+            {entries.map(
+                ({
+                    key,
+                    value,
+                    description,
+                    valueType,
+                    enumValues,
+                    valueKinds,
+                    msSlider,
+                    jsonObject,
+                }) => (
+                        <div
+                            key={`${idPrefix}${key}`}
+                            style={{
+                                ...styles.propRow,
+                                ...(msSlider || valueType === 'object'
+                                    ? { alignItems: 'start' as const }
+                                    : {}),
+                            }}
+                        >
+                            <span style={styles.propKey}>
+                                <span>{key}</span>
+                                {description ? (
+                                    <PropHelpTooltip text={description} />
+                                ) : null}
+                            </span>
+                            <span style={styles.propValue}>
+                                <PropCell
+                                    value={value}
+                                    editable={editable}
+                                    valueType={valueType}
+                                    enumValues={enumValues}
+                                    valueKinds={valueKinds}
+                                    msSlider={msSlider}
+                                    jsonObject={jsonObject}
+                                    onChange={(next) =>
+                                        onPropChange?.(key, next)
+                                    }
+                                />
+                            </span>
+                        </div>
+                ),
+            )}
         </div>
     );
 }
@@ -501,6 +619,7 @@ function StepCard({
             <PropsGrid
                 entries={entries}
                 editable={editable}
+                idPrefix={`step-${index}-`}
                 onPropChange={onPropChange}
             />
         </div>
@@ -552,6 +671,47 @@ interface TabStripProps {
     onChange: (id: ConfigTabId) => void;
 }
 
+interface FlowEditModeBarProps {
+    mode: FlowEditMode;
+    onChange: (mode: FlowEditMode) => void;
+    jsonAvailable: boolean;
+}
+
+function FlowEditModeBar({ mode, onChange, jsonAvailable }: FlowEditModeBarProps) {
+    if (!jsonAvailable) return null;
+    return (
+        <div style={styles.flowEditModeBar}>
+            <div
+                style={styles.flowEditModeToggle}
+                role="group"
+                aria-label="Flow edit mode"
+            >
+                <button
+                    type="button"
+                    style={styles.flowEditModeBtn(mode === 'form')}
+                    aria-pressed={mode === 'form'}
+                    onClick={() => onChange('form')}
+                >
+                    Form
+                </button>
+                <button
+                    type="button"
+                    style={styles.flowEditModeBtn(mode === 'json')}
+                    aria-pressed={mode === 'json'}
+                    onClick={() => onChange('json')}
+                >
+                    JSON
+                </button>
+            </div>
+            <span style={styles.flowEditModeHint}>
+                {mode === 'json'
+                    ? 'Function props (assert, condition) stay in Form mode.'
+                    : 'Step-by-step fields'}
+            </span>
+        </div>
+    );
+}
+
 function TabStrip({ tabs, active, onChange }: TabStripProps) {
     return (
         <div style={styles.tabStrip} role="tablist">
@@ -582,9 +742,10 @@ export function FlowConfigViewer({
     onChange,
     onRunOptionsChange,
     onCursorOptionsChange,
-    initialTab = 'overall',
+    initialTab = 'flow',
     className,
     style,
+    renderFlowJsonEditor,
 }: FlowConfigViewerProps) {
     const isStepEditable = editable && typeof onChange === 'function';
     const isRunOptionsEditable =
@@ -593,6 +754,17 @@ export function FlowConfigViewer({
         editable && typeof onCursorOptionsChange === 'function';
 
     const [activeTab, setActiveTab] = useState<ConfigTabId>(initialTab);
+    const [flowEditMode, setFlowEditMode] = useState<FlowEditMode>('form');
+    const flowJsonFlushRef = useRef<(() => void) | null>(null);
+    const flowJsonEditorAvailable =
+        Boolean(renderFlowJsonEditor) && isStepEditable;
+
+    const handleFlowEditModeChange = (mode: FlowEditMode) => {
+        if (flowEditMode === 'json' && mode === 'form') {
+            flowJsonFlushRef.current?.();
+        }
+        setFlowEditMode(mode);
+    };
 
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -678,13 +850,17 @@ export function FlowConfigViewer({
     };
 
     const cursorEntries: PropsGridEntry[] = isCursorOptionsEditable
-        ? CURSOR_OPTIONS_SCHEMA.map(({ key, enumValues }) => ({
-              key,
-              value: (cursorOptions as Record<string, unknown> | undefined)?.[
-                  key
-              ],
-              enumValues,
-          }))
+        ? CURSOR_OPTIONS_SCHEMA.map(
+              ({ key, description, valueType, enumValues }) => ({
+                  key,
+                  value: (
+                      cursorOptions as Record<string, unknown> | undefined
+                  )?.[key],
+                  description,
+                  valueType,
+                  enumValues,
+              }),
+          )
         : cursorOptions
           ? Object.entries(cursorOptions)
                 .filter(([, v]) => v !== undefined)
@@ -692,7 +868,13 @@ export function FlowConfigViewer({
                     const meta = CURSOR_OPTIONS_SCHEMA.find(
                         (s) => s.key === k,
                     );
-                    return { key: k, value: v, enumValues: meta?.enumValues };
+                    return {
+                        key: k,
+                        value: v,
+                        description: meta?.description,
+                        valueType: meta?.valueType,
+                        enumValues: meta?.enumValues,
+                    };
                 })
           : [];
 
@@ -702,26 +884,37 @@ export function FlowConfigViewer({
               value: (runOptions as Record<string, unknown> | undefined)?.[
                   schema.key
               ],
+              description: schema.description,
+              valueType: schema.valueType,
               enumValues: schema.enumValues,
               valueKinds: schema.valueKinds,
           }))
         : runOptions
           ? Object.entries(runOptions)
                 .filter(([, v]) => v !== undefined)
-                .map(([k, v]) => ({ key: k, value: v }))
+                .map(([k, v]) => {
+                    const meta = RUN_OPTIONS_SCHEMA.find((s) => s.key === k);
+                    return {
+                        key: k,
+                        value: v,
+                        description: meta?.description,
+                        valueType: meta?.valueType,
+                        enumValues: meta?.enumValues,
+                    };
+                })
           : [];
 
     const tabs: TabDef[] = [
-        {
-            id: 'overall',
-            label: 'Overall',
-            available: isCursorOptionsEditable || cursorEntries.length > 0,
-        },
         { id: 'flow', label: 'Flow', available: true },
         {
             id: 'runOptions',
             label: 'Run options',
             available: isRunOptionsEditable || runOptionsEntries.length > 0,
+        },
+        {
+            id: 'overall',
+            label: 'Cursor',
+            available: isCursorOptionsEditable || cursorEntries.length > 0,
         },
     ];
 
@@ -768,6 +961,7 @@ export function FlowConfigViewer({
                             <PropsGrid
                                 entries={cursorEntries}
                                 editable={isCursorOptionsEditable}
+                                idPrefix="cursor-"
                                 onPropChange={handleCursorOptionChange}
                             />
                         </div>
@@ -781,6 +975,24 @@ export function FlowConfigViewer({
 
             {resolvedActiveTab === 'flow' ? (
                 <div style={styles.pane}>
+                    <FlowEditModeBar
+                        mode={flowEditMode}
+                        onChange={handleFlowEditModeChange}
+                        jsonAvailable={flowJsonEditorAvailable}
+                    />
+                    {flowEditMode === 'json' &&
+                    renderFlowJsonEditor &&
+                    onChange ? (
+                        renderFlowJsonEditor({
+                            flow,
+                            editable: isStepEditable,
+                            onChange,
+                            registerFlush: (flush) => {
+                                flowJsonFlushRef.current = flush;
+                            },
+                        })
+                    ) : (
+                        <>
                     {flow.map((step, idx) => (
                         <StepCard
                             key={idx}
@@ -815,6 +1027,8 @@ export function FlowConfigViewer({
                         />
                     ))}
                     {isStepEditable ? <AddStepRow onAdd={handleAdd} /> : null}
+                        </>
+                    )}
                 </div>
             ) : null}
 
@@ -828,6 +1042,7 @@ export function FlowConfigViewer({
                             <PropsGrid
                                 entries={runOptionsEntries}
                                 editable={isRunOptionsEditable}
+                                idPrefix="run-"
                                 onPropChange={handleRunOptionChange}
                             />
                         </div>

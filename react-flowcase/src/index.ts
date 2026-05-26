@@ -54,6 +54,8 @@ export { FlowConfigViewer } from './flow/FlowConfigViewer';
 export type {
     FlowConfigViewerProps,
     ConfigTabId,
+    FlowEditMode,
+    FlowJsonEditorRenderProps,
 } from './flow/FlowConfigViewer';
 export { FlowConfigModal } from './flow/FlowConfigModal';
 export type { FlowConfigModalProps } from './flow/FlowConfigModal';
@@ -82,7 +84,11 @@ export {
     CURSOR_OPTIONS_SCHEMA,
     createDefaultStep,
 } from './flow/stepDefaults';
-export type { StepType, ConfigPropSchema } from './flow/stepDefaults';
+export type {
+    StepType,
+    ConfigPropSchema,
+    JsonObjectEditorConfig,
+} from './flow/stepDefaults';
 export { describeStep } from './flow/types';
 export type {
     FlowStep,

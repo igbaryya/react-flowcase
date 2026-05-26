@@ -1,0 +1,127 @@
+.code-block {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #12151c;
+    min-width: 0;
+}
+
+.code-block-chrome {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--border);
+}
+
+.code-block-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.code-block-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.code-block-dots span:nth-child(1) {
+    background: #ef5b6b;
+}
+
+.code-block-dots span:nth-child(2) {
+    background: #e8b84a;
+}
+
+.code-block-dots span:nth-child(3) {
+    background: #58c87b;
+}
+
+.code-block-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+
+.code-block-lang {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid rgba(106, 169, 255, 0.25);
+    border-radius: 4px;
+    padding: 2px 7px;
+    flex-shrink: 0;
+}
+
+.code-block-filename {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.code-block-copy {
+    margin-left: auto;
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    transition:
+        color 0.12s,
+        border-color 0.12s,
+        background 0.12s;
+}
+
+.code-block-copy:hover {
+    color: var(--accent);
+    border-color: rgba(106, 169, 255, 0.4);
+    background: var(--accent-bg);
+}
+
+.code-block-body {
+    overflow: auto;
+    max-height: var(--code-block-max-height, 540px);
+}
+
+.code-block-body pre {
+    margin: 0 !important;
+    padding: 16px 18px !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    font-size: 12px !important;
+    line-height: 1.65 !important;
+}
+
+.code-block-line {
+    display: table-row;
+}
+
+.code-block-line-no {
+    display: table-cell;
+    text-align: right;
+    padding-right: 14px;
+    user-select: none;
+    opacity: 0.35;
+    font-variant-numeric: tabular-nums;
+    min-width: 28px;
+}
+
+.code-block-line-content {
+    display: table-cell;
+    width: 100%;
+}

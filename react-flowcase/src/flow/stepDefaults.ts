@@ -1,3 +1,5 @@
+import type { MsSliderConfig, PropValueType } from './PropEditor';
+import { propDescription, type PropDescriptionKey } from './propDescriptions';
 import type { FlowStep } from './types';
 
 export type StepType = FlowStep['type'];
@@ -14,127 +16,184 @@ export const STEP_TYPES: ReadonlyArray<StepType> = [
     'scroll',
 ];
 
-/**
- * Optional metadata describing a single prop in a configuration schema.
- * - `enumValues` (string props) — renders a `<select>` constrained to these.
- * - `valueKinds` — renders a kind-toggle for union props (e.g. `wait` is
- *   `boolean | number`), letting the user switch the value's type from the UI.
- */
-export interface ConfigPropSchema {
-    key: string;
-    enumValues?: ReadonlyArray<string>;
-    valueKinds?: ReadonlyArray<'boolean' | 'number' | 'string'>;
+export interface JsonObjectEditorConfig {
+    /** JSON object (default) or array (e.g. `modifiers`). */
+    kind?: 'object' | 'array';
+    placeholder?: string;
+    minHeight?: number;
+    maxHeight?: number;
+    helpText?: string;
 }
 
-/**
- * Ordered list of editable property schemas per step type. The editor uses
- * this to render a complete set of inputs (including currently-undefined
- * optional props), so "Add step" + edit gives full coverage of the prop
- * surface.
- *
- * `type` is intentionally excluded — it drives the discriminated union and
- * cannot be edited in place. To change a step's type, delete and re-add.
- */
+export interface ConfigPropSchema {
+    key: string;
+    description?: string;
+    valueType?: PropValueType;
+    enumValues?: ReadonlyArray<string>;
+    valueKinds?: ReadonlyArray<'boolean' | 'number' | 'string'>;
+    msSlider?: MsSliderConfig;
+    /** Options when `valueType` is `'object'` (e.g. `move`, `by`, `to`). */
+    jsonObject?: JsonObjectEditorConfig;
+}
+
+type SchemaRest = Omit<ConfigPropSchema, 'key' | 'description'>;
+
+const MOVE_JSON_OBJECT: JsonObjectEditorConfig = {
+    placeholder: '{\n  "duration": 600\n}',
+    minHeight: 100,
+    helpText: 'MoveOptions JSON — e.g. duration (ms). Applies on blur.',
+};
+
+const SCROLL_DELTA_JSON: JsonObjectEditorConfig = {
+    placeholder: '{\n  "x": 0,\n  "y": 120\n}',
+    minHeight: 88,
+};
+
+const MODIFIERS_JSON: JsonObjectEditorConfig = {
+    kind: 'array',
+    placeholder: '["shift"]',
+    minHeight: 72,
+    helpText: 'JSON array of modifier keys. Applies on blur.',
+};
+
+function sp(
+    key: PropDescriptionKey,
+    rest: SchemaRest & { description?: string } = {},
+): ConfigPropSchema {
+    const { description, ...schemaRest } = rest;
+    return {
+        key,
+        description: propDescription(key, description),
+        ...schemaRest,
+    };
+}
+
 export const STEP_SCHEMAS: Readonly<
     Record<StepType, ReadonlyArray<ConfigPropSchema>>
 > = {
     click: [
-        { key: 'element' },
-        { key: 'index' },
-        { key: 'wait', valueKinds: ['boolean', 'number'] },
-        { key: 'move' },
-        { key: 'moveOnFailure' },
-        { key: 'assert' },
+        sp('element', { valueType: 'string' }),
+        sp('index', { valueType: 'number' }),
+        sp('wait', {
+            valueKinds: ['boolean', 'number'],
+            msSlider: { min: 0, max: 30000, step: 250, defaultMs: 5000 },
+        }),
+        sp('move', { valueType: 'object', jsonObject: MOVE_JSON_OBJECT }),
+        sp('moveOnFailure', { valueType: 'boolean' }),
+        sp('assert', { valueType: 'function' }),
     ],
     input: [
-        { key: 'element' },
-        { key: 'index' },
-        { key: 'value' },
-        { key: 'charDelayMs' },
-        { key: 'append' },
-        { key: 'move' },
-        { key: 'moveOnFailure' },
-        { key: 'assert' },
+        sp('element', { valueType: 'string' }),
+        sp('index', { valueType: 'number' }),
+        sp('value', { valueType: 'string' }),
+        sp('charDelayMs', {
+            valueType: 'number',
+            msSlider: { min: 0, max: 300, step: 5, defaultMs: 50 },
+        }),
+        sp('append', { valueType: 'boolean' }),
+        sp('move', { valueType: 'object', jsonObject: MOVE_JSON_OBJECT }),
+        sp('moveOnFailure', { valueType: 'boolean' }),
+        sp('assert', { valueType: 'function' }),
     ],
     select: [
-        { key: 'element' },
-        { key: 'index' },
-        { key: 'value' },
-        { key: 'move' },
-        { key: 'moveOnFailure' },
-        { key: 'assert' },
+        sp('element', { valueType: 'string' }),
+        sp('index', { valueType: 'number' }),
+        sp('value', { valueType: 'string' }),
+        sp('move', { valueType: 'object', jsonObject: MOVE_JSON_OBJECT }),
+        sp('moveOnFailure', { valueType: 'boolean' }),
+        sp('assert', { valueType: 'function' }),
     ],
-    delay: [{ key: 'duration' }],
+    delay: [
+        sp('duration', {
+            valueType: 'number',
+            msSlider: { min: 0, max: 15000, step: 50, defaultMs: 1000 },
+            description:
+                'Milliseconds to pause before the next step. No cursor movement.',
+        }),
+    ],
     waitFor: [
-        { key: 'element' },
-        {
-            key: 'state',
+        sp('element', { valueType: 'string' }),
+        sp('state', {
+            valueType: 'string',
             enumValues: ['attached', 'visible', 'enabled', 'detached'],
-        },
-        { key: 'condition' },
-        { key: 'timeout' },
-        { key: 'pollInterval' },
-        { key: 'index' },
-        { key: 'moveTo' },
-        { key: 'move' },
-        { key: 'moveOnFailure' },
+        }),
+        sp('condition', { valueType: 'function' }),
+        sp('timeout', {
+            valueType: 'number',
+            msSlider: { min: 500, max: 30000, step: 250, defaultMs: 5000 },
+        }),
+        sp('pollInterval', {
+            valueType: 'number',
+            msSlider: { min: 10, max: 500, step: 10, defaultMs: 50 },
+        }),
+        sp('index', { valueType: 'number' }),
+        sp('moveTo', { valueType: 'boolean' }),
+        sp('move', { valueType: 'object', jsonObject: MOVE_JSON_OBJECT }),
+        sp('moveOnFailure', { valueType: 'boolean' }),
     ],
     hover: [
-        { key: 'element' },
-        { key: 'index' },
-        { key: 'duration' },
-        { key: 'move' },
-        { key: 'moveOnFailure' },
+        sp('element', { valueType: 'string' }),
+        sp('index', { valueType: 'number' }),
+        sp('duration', {
+            valueType: 'number',
+            msSlider: { min: 0, max: 5000, step: 50, defaultMs: 600 },
+            description:
+                'How long the cursor lingers on the element after arriving. Default 600ms.',
+        }),
+        sp('move', { valueType: 'object', jsonObject: MOVE_JSON_OBJECT }),
+        sp('moveOnFailure', { valueType: 'boolean' }),
     ],
     keypress: [
-        { key: 'element' },
-        { key: 'index' },
-        { key: 'key' },
-        { key: 'modifiers' },
-        { key: 'repeat' },
-        { key: 'interval' },
-        { key: 'moveTo' },
-        { key: 'move' },
-        { key: 'moveOnFailure' },
+        sp('element', { valueType: 'string' }),
+        sp('index', { valueType: 'number' }),
+        sp('key', { valueType: 'string' }),
+        sp('modifiers', { valueType: 'object', jsonObject: MODIFIERS_JSON }),
+        sp('repeat', { valueType: 'number' }),
+        sp('interval', {
+            valueType: 'number',
+            msSlider: { min: 10, max: 500, step: 10, defaultMs: 80 },
+        }),
+        sp('moveTo', { valueType: 'boolean' }),
+        sp('move', { valueType: 'object', jsonObject: MOVE_JSON_OBJECT }),
+        sp('moveOnFailure', { valueType: 'boolean' }),
     ],
     scroll: [
-        { key: 'element' },
-        { key: 'index' },
-        { key: 'container' },
-        { key: 'by' },
-        { key: 'to' },
-        { key: 'behavior', enumValues: ['auto', 'smooth'] },
-        {
-            key: 'block',
+        sp('element', { valueType: 'string' }),
+        sp('index', { valueType: 'number' }),
+        sp('container', { valueType: 'string' }),
+        sp('by', { valueType: 'object', jsonObject: SCROLL_DELTA_JSON }),
+        sp('to', { valueType: 'object', jsonObject: SCROLL_DELTA_JSON }),
+        sp('behavior', {
+            valueType: 'string',
+            enumValues: ['auto', 'smooth'],
+        }),
+        sp('block', {
+            valueType: 'string',
             enumValues: ['start', 'center', 'end', 'nearest'],
-        },
-        { key: 'settleMs' },
-        { key: 'moveOnFailure' },
+        }),
+        sp('settleMs', {
+            valueType: 'number',
+            msSlider: { min: 0, max: 2000, step: 50, defaultMs: 350 },
+        }),
+        sp('moveOnFailure', { valueType: 'boolean' }),
     ],
 };
 
-/** Editable schemas on `FlowRunOptions`. */
 export const RUN_OPTIONS_SCHEMA: ReadonlyArray<ConfigPropSchema> = [
-    { key: 'onStep' },
-    { key: 'onAssertFail' },
-    { key: 'autoScroll' },
+    sp('onStep', { valueType: 'function' }),
+    sp('onAssertFail', { valueType: 'function' }),
+    sp('autoScroll', { valueType: 'boolean' }),
 ];
 
-/**
- * Editable schemas on `UseVirtualCursorOptions`. `visibility` carries enum
- * metadata so the editor renders it as a `<select>`.
- */
 export const CURSOR_OPTIONS_SCHEMA: ReadonlyArray<ConfigPropSchema> = [
-    { key: 'visibility', enumValues: ['always', 'onStart', 'never'] },
-    { key: 'autoHide' },
-    { key: 'appearance' },
+    sp('visibility', {
+        valueType: 'string',
+        enumValues: ['always', 'onStart', 'never'],
+    }),
+    sp('autoHide', { valueType: 'boolean' }),
+    sp('appearance', { valueType: 'string' }),
 ];
 
-/**
- * Returns a fresh step of the given type populated with sensible defaults -
- * just the props the discriminated union requires, so generated code stays
- * minimal.
- */
 export function createDefaultStep(type: StepType): FlowStep {
     switch (type) {
         case 'click':

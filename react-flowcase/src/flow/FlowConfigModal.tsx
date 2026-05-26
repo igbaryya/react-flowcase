@@ -6,7 +6,7 @@ import {
 } from './FlowConfigViewer';
 
 export interface FlowConfigModalProps
-    extends Omit<FlowConfigViewerProps, 'title'> {
+    extends Omit<FlowConfigViewerProps, 'title' | 'initialTab'> {
     open: boolean;
     onClose: () => void;
     /** Heading rendered in the modal header. */
@@ -24,20 +24,20 @@ const styles = {
         padding: 0,
         border: 'none',
         background: 'transparent',
-        maxWidth: 'min(720px, 92vw)',
+        maxWidth: 'min(760px, 94vw)',
         width: '100%',
-        maxHeight: '85vh',
+        maxHeight: '88vh',
         color: 'inherit',
     } as CSSProperties,
     panel: {
-        background: '#1d2230',
+        background: '#1a1f2b',
         color: '#e6e8ee',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: 12,
-        boxShadow: '0 24px 60px rgba(0, 0, 0, 0.55)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: 14,
+        boxShadow: '0 28px 72px rgba(0, 0, 0, 0.6)',
         display: 'flex',
         flexDirection: 'column',
-        maxHeight: '85vh',
+        maxHeight: '88vh',
         overflow: 'hidden',
         fontFamily:
             'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
@@ -46,32 +46,34 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '14px 18px',
+        padding: '16px 20px',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         gap: 12,
     } as CSSProperties,
     title: {
         margin: 0,
-        fontSize: 14,
+        fontSize: 15,
         fontWeight: 600,
+        letterSpacing: '-0.01em',
     } as CSSProperties,
     closeBtn: {
-        background: 'transparent',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
+        background: 'rgba(255, 255, 255, 0.06)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
         color: 'inherit',
-        borderRadius: 6,
-        width: 28,
-        height: 28,
+        borderRadius: 8,
+        width: 32,
+        height: 32,
         cursor: 'pointer',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: 18,
+        fontSize: 20,
         lineHeight: 1,
         padding: 0,
+        transition: 'background 0.12s',
     } as CSSProperties,
     body: {
-        padding: 18,
+        padding: '16px 20px 20px',
         overflow: 'auto',
         flex: 1,
         minHeight: 0,
@@ -80,16 +82,17 @@ const styles = {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '12px 18px',
+        padding: '14px 20px',
         borderTop: '1px solid rgba(255, 255, 255, 0.08)',
         gap: 8,
+        background: 'rgba(0, 0, 0, 0.15)',
     } as CSSProperties,
     ghostBtn: {
         background: 'transparent',
         border: '1px solid rgba(255, 255, 255, 0.15)',
         color: 'inherit',
-        borderRadius: 6,
-        padding: '6px 12px',
+        borderRadius: 8,
+        padding: '8px 14px',
         cursor: 'pointer',
         fontSize: 12,
     } as CSSProperties,
@@ -97,8 +100,8 @@ const styles = {
         background: '#6aa9ff',
         color: '#0a0c11',
         border: '1px solid #6aa9ff',
-        borderRadius: 6,
-        padding: '6px 14px',
+        borderRadius: 8,
+        padding: '8px 18px',
         cursor: 'pointer',
         fontSize: 12,
         fontWeight: 600,
@@ -114,8 +117,8 @@ function ensureBackdropStyles(): void {
     style.id = BACKDROP_STYLE_ID;
     style.textContent = `
         dialog[data-rca-config-modal]::backdrop {
-            background: rgba(0, 0, 0, 0.55);
-            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
         }
     `;
     document.head.appendChild(style);
@@ -178,7 +181,11 @@ export function FlowConfigModal({
                     </button>
                 </div>
                 <div style={styles.body}>
-                    <FlowConfigViewer {...viewerProps} title="" />
+                    <FlowConfigViewer
+                        {...viewerProps}
+                        title=""
+                        initialTab="flow"
+                    />
                 </div>
                 <div style={styles.footer}>
                     {onReset ? (

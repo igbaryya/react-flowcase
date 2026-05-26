@@ -7,6 +7,7 @@ import {
     type ComponentType,
     type ReactNode,
 } from 'react';
+import { AiJsonDemoPage } from './pages/AiJson/AiJsonDemoPage';
 import { AssertionsDemoPage } from './pages/Assertions/AssertionsDemoPage';
 import { AsyncDemoPage } from './pages/Async/AsyncDemoPage';
 import { CustomCursorDemoPage } from './pages/CustomCursor/CustomCursorDemoPage';
@@ -84,6 +85,13 @@ const PAGES: DemoPage[] = [
         section: 'demos',
         number: 5,
         Component: LoginDemoPage,
+    },
+    {
+        id: 'ai-json',
+        label: 'AI · FlowStep[] from chat',
+        section: 'demos',
+        number: 6,
+        Component: AiJsonDemoPage,
     },
     {
         id: 'hover',

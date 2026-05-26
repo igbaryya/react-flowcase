@@ -1,4 +1,4 @@
-import { Children, isValidElement, useMemo, type ReactNode } from 'react';
+import { Children, isValidElement, useMemo, useState, type ReactNode } from 'react';
 import {
     FlowConfigModal,
     FlowStepsIndicator,
@@ -10,6 +10,8 @@ import {
 import { CodeBlock } from './CodeBlock';
 import { ConceptCallout } from './ConceptCallout';
 import { DemoPageHeader } from './DemoPageHeader';
+import { FlowJsonMonacoEditor } from './FlowJsonMonacoEditor';
+import { JsonReadonlyViewer } from './JsonReadonlyViewer';
 import { PlayIcon, StopIcon } from './icons';
 import type { useDemoFlow } from './useDemoFlow';
 import './demo-page.css';
@@ -94,6 +96,13 @@ export function DemoPageShell({
         cancel,
     } = flowState;
 
+    const [hasStarted, setHasStarted] = useState(false);
+
+    const handleStart = () => {
+        setHasStarted(true);
+        startAutomation();
+    };
+
     const generatedCode = useMemo(
         () =>
             generateFullExample({
@@ -140,14 +149,6 @@ export function DemoPageShell({
             return { concept: undefined, children };
         }, [concept, children]);
 
-    const copyExample = async () => {
-        try {
-            await navigator.clipboard.writeText(generatedCode);
-        } catch {
-            /* clipboard blocked — user can select manually */
-        }
-    };
-
     const resultsNode =
         pageOutcome || flowResult ? (
             <div
@@ -157,7 +158,7 @@ export function DemoPageShell({
             >
                 {pageOutcome}
                 {flowResult ? (
-                    <div className="demo-card">
+                    <div className="demo-card demo-card--outcome">
                         <div
                             className={`status ${flowResult.completed ? 'success' : 'error'}`}
                         >
@@ -178,13 +179,9 @@ export function DemoPageShell({
                                 and <code>select</code> steps do.
                             </p>
                         ) : (
-                            <pre className="outcome">
-                                {JSON.stringify(
-                                    flowResult.lastOutcome,
-                                    null,
-                                    2,
-                                )}
-                            </pre>
+                            <JsonReadonlyViewer
+                                value={flowResult.lastOutcome}
+                            />
                         )}
                     </div>
                 ) : null}
@@ -209,16 +206,33 @@ export function DemoPageShell({
             ) : null}
 
             <div className="demo-page-playground">
-                <div className="demo-page-form">
+                <div className={`demo-page-form${!hasStarted ? ' demo-page-form--idle' : ''}`}>
                     {resolvedChildren}
-                    <button
-                        type="button"
-                        className={`demo-run-btn ${running ? 'demo-run-btn--stop' : ''}`}
-                        onClick={running ? cancel : startAutomation}
-                    >
-                        {running ? <StopIcon /> : <PlayIcon />}
-                        <span>{running ? 'Stop' : 'Run Flow'}</span>
-                    </button>
+                    {hasStarted && (
+                        <button
+                            type="button"
+                            className={`demo-run-btn ${running ? 'demo-run-btn--stop' : ''}`}
+                            onClick={running ? cancel : startAutomation}
+                        >
+                            {running ? <StopIcon /> : <PlayIcon />}
+                            <span>{running ? 'Stop' : 'Run Flow'}</span>
+                        </button>
+                    )}
+                    {!hasStarted && (
+                        <button
+                            type="button"
+                            className="demo-start-overlay"
+                            onClick={handleStart}
+                        >
+                            <span className="demo-start-overlay-btn">
+                                <PlayIcon />
+                                <span>Run Flow</span>
+                            </span>
+                            <span className="demo-start-overlay-hint">
+                                Click to start the automation
+                            </span>
+                        </button>
+                    )}
                 </div>
 
                 <aside className="demo-page-aside">
@@ -243,31 +257,15 @@ export function DemoPageShell({
             ) : null}
 
             <section className="demo-page-code">
-                <div className="demo-example">
-                    <div className="demo-example-header">
-                        <div>
-                            <span className="demo-example-eyebrow">
-                                Example
-                            </span>
-                            <span className="demo-example-path">
-                                {filename}
-                            </span>
-                        </div>
-                        <button
-                            type="button"
-                            className="demo-example-copy"
-                            onClick={copyExample}
-                        >
-                            Copy
-                        </button>
-                    </div>
-                    <p className="demo-example-hint">
-                        Live preview of what an integration with this demo
-                        looks like. Edits in the flow editor regenerate the
-                        code below.
-                    </p>
-                    <CodeBlock code={generatedCode} language="tsx" />
-                </div>
+                <p className="demo-example-hint">
+                    Live preview of what an integration with this demo looks
+                    like. Edits in the flow editor regenerate the code below.
+                </p>
+                <CodeBlock
+                    code={generatedCode}
+                    language="tsx"
+                    filename={filename}
+                />
             </section>
 
             <FlowConfigModal
@@ -281,6 +279,9 @@ export function DemoPageShell({
                 onCursorOptionsChange={setCursorOptions}
                 editable
                 onReset={resetFlow}
+                renderFlowJsonEditor={(props) => (
+                    <FlowJsonMonacoEditor {...props} />
+                )}
             />
 
             <VirtualCursor

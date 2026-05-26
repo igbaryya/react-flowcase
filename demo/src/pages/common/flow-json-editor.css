@@ -1,0 +1,55 @@
+.flow-json-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.flow-json-editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.flow-json-editor-btn {
+    background: rgba(106, 169, 255, 0.15);
+    border: 1px solid rgba(106, 169, 255, 0.35);
+    color: #6aa9ff;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.flow-json-editor-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.flow-json-editor-toolbar-hint {
+    font-size: 10px;
+    opacity: 0.5;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.flow-json-editor-toolbar-hint code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10px;
+}
+
+.flow-json-editor-surface {
+    border: 1px solid rgba(127, 127, 127, 0.28);
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 200px;
+}
+
+.flow-json-editor-error {
+    margin: 0;
+    font-size: 11px;
+    color: #ef5b6b;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+}

@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { CodeBlock } from '../common/CodeBlock';
-import { HeroFlowPreview } from './HeroFlowPreview';
+import { HeroIllustration } from './HeroIllustration';
 import './home-page.css';
 
 export interface HomePageProps {
@@ -222,6 +222,15 @@ const DEMO_CATALOG: DemoCard[] = [
         description:
             'Sign-in crosses navigation, hydrates on dashboard, resumes after manual reload.',
         badge: 'sessionStorage · auto-resume',
+        category: 'core',
+    },
+    {
+        id: 'ai-json',
+        step: '06',
+        title: 'AI · FlowStep[] from chat',
+        description:
+            'Model returns react-flowcase FlowStep[] JSON; useCursorFlow runs it on a working-hours form with virtual cursor.',
+        badge: 'FlowStep[] · runFlow · AI',
         category: 'core',
     },
     {
@@ -459,7 +468,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     </ul>
                 </div>
 
-                <HeroFlowPreview />
+                <HeroIllustration />
             </header>
 
             <section
@@ -534,6 +543,8 @@ export function HomePage({ onNavigate }: HomePageProps) {
                         <CodeBlock
                             code={INSTALL_COMMANDS[pm]}
                             language="bash"
+                            lineNumbers={false}
+                            maxHeight={80}
                         />
                         <p className="home-start-note">
                             Peer deps: <code>react ^18 || ^19</code>,{' '}
@@ -542,9 +553,12 @@ export function HomePage({ onNavigate }: HomePageProps) {
                     </div>
                     <div className="home-start-code">
                         <h3 className="home-start-panel-title">Quick start</h3>
-                        <div className="home-code-shell">
-                            <CodeBlock code={QUICKSTART_CODE} language="tsx" />
-                        </div>
+                        <CodeBlock
+                            code={QUICKSTART_CODE}
+                            language="tsx"
+                            filename="QuickStart.tsx"
+                            maxHeight={380}
+                        />
                         <ol className="home-hook-list">
                             <li>
                                 <code>useVirtualCursor</code> — position &

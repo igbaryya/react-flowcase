@@ -1,0 +1,18 @@
+.json-readonly-viewer {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--panel-2);
+    width: 100%;
+    min-width: 0;
+}
+
+.json-readonly-viewer .monaco-editor,
+.json-readonly-viewer .monaco-editor-background,
+.json-readonly-viewer .margin {
+    background-color: var(--panel-2) !important;
+}
+
+.json-readonly-viewer .monaco-editor .overflow-guard {
+    border-radius: 8px;
+}
