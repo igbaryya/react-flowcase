@@ -2,7 +2,6 @@
 
 A React library for building visual, automated walkthroughs: a virtual cursor you can drive across the page, awaitable click/input primitives that surface async handler results back to your runner, and a declarative flow-step API with cancellation.
 
-> Status: pre-1.0. APIs may change.
 
 **Live demo:** [igbaryya.github.io/react-flowcase](https://igbaryya.github.io/react-flowcase/)
 
@@ -229,6 +228,139 @@ Pass `false` to either shortcut prop to disable it entirely.
 | Press `Enter`, `Esc`, `Tab`, arrows, etc. | `{ type: 'keypress', key, modifiers }`         |
 
 Mouse-only events like `hover` and timing primitives like `delay` / `waitFor` aren't observable from the DOM — add those by hand once the recorder gives you the skeleton.
+
+## AI-generated flows
+
+Besides recording or hand-authoring steps, you can let an LLM **emit a `FlowStep[]` as JSON** from natural language. Your frontend parses the response and passes it straight to `runFlow` — the same runner, virtual cursor, and step events as every other flow.
+
+**Live demo:** [Core demo 06 — AI · FlowStep[] from chat](https://igbaryya.github.io/react-flowcase/?demo=ai-json) — chat message → mock AI JSON → `useCursorFlow` fills a working-hours form.
+
+### Pattern
+
+```
+User chat  →  LLM (system instruction)  →  { "flow": FlowStep[] }  →  JSON.parse  →  run(flow)
+```
+
+1. **System instruction** — pin the model to your schema, allowed step types, and a **selector map** for the current page (ids, `data-testid`s, etc.).
+2. **User message** — plain language (“fill Mon–Fri 9–18, Tuesday leave at 17”).
+3. **Assistant reply** — JSON only (no markdown fences, no prose).
+4. **Frontend** — validate, then `const { run } = useCursorFlow(cursor); await run(parsed.flow);`.
+
+### Response shape
+
+```json
+{
+  "flow": [
+    { "type": "input", "element": "#wh-monday-start", "value": "09:00" },
+    { "type": "input", "element": "#wh-monday-end", "value": "18:00" },
+    { "type": "input", "element": "#wh-tuesday-end", "value": "17:00" }
+  ]
+}
+```
+
+### What the model can emit (JSON-safe subset)
+
+Only steps and fields that survive `JSON.stringify` — **no functions**:
+
+| Step type   | Typical use in AI flows                          |
+| ----------- | ------------------------------------------------ |
+| `input`     | Type into `#id` fields                           |
+| `click`     | Buttons; use `wait: true` when handlers are async |
+| `select`    | `<select>` options by `value`                    |
+| `delay`     | Pause after navigation or animation              |
+| `waitFor`   | Poll `element` + `state` (not `condition` — that's code) |
+| `hover`     | Menus / tooltips                                 |
+| `keypress`  | Shortcuts, Enter to submit                       |
+| `scroll`    | Bring off-screen targets into view               |
+
+Omit from AI output (add in code after parse if needed):
+
+- `assert: (result) => boolean`
+- `value: (prev) => string` — use literal strings in JSON instead
+- `waitFor` with `condition: () => ...`
+
+Include the **selector map** in the system prompt so the model only targets elements that exist:
+
+```text
+Available selectors on this page:
+  #wh-monday-start, #wh-monday-end
+  #wh-tuesday-start, #wh-tuesday-end, #wh-tuesday-notes
+  #submit
+```
+
+### Minimal integration
+
+```tsx
+import {
+    VirtualCursor,
+    useVirtualCursor,
+    useCursorFlow,
+    type FlowStep,
+} from 'react-flowcase';
+
+interface AiFlowResponse {
+    flow: FlowStep[];
+}
+
+function parseAssistantFlow(raw: string): FlowStep[] {
+    const data = JSON.parse(raw) as AiFlowResponse;
+    if (!Array.isArray(data.flow)) throw new Error('Missing flow array');
+    return data.flow;
+}
+
+function TimesheetPage() {
+    const cursor = useVirtualCursor({ visibility: 'onStart', autoHide: true });
+    const { run, running } = useCursorFlow(cursor);
+
+    const onAssistantMessage = async (jsonText: string) => {
+        const steps = parseAssistantFlow(jsonText);
+        await run(steps);
+    };
+
+    return (
+        <>
+            <WorkingHoursForm />
+            <ChatPanel onFlowJson={onAssistantMessage} />
+            <VirtualCursor
+                position={cursor.position}
+                visible={cursor.visible}
+            />
+        </>
+    );
+}
+```
+
+Validate step shapes (required `type` / `element`, allowed types) before `run` in production. The demo uses a fixed mock response; wire your own API or chat SDK where `onAssistantMessage` is called.
+
+### System instruction (starter)
+
+Copy and adapt — the [demo](https://igbaryya.github.io/react-flowcase/?demo=ai-json) expands this with a full working-hours selector map:
+
+```text
+You are a UI automation assistant for a React app using react-flowcase.
+
+The user describes what to do in natural language. Respond with ONLY valid JSON — no markdown fences, no prose.
+
+Schema:
+{ "flow": FlowStep[] }
+
+Each step: { "type": "input"|"click"|"select"|"delay"|"waitFor"|"hover"|"keypress"|"scroll", ... }
+- "element" must be a CSS selector from the DOM map below.
+- Prefer "input" for fields; "click" for buttons only.
+
+DOM map:
+  #email, #password, #submit
+```
+
+### Recorder vs AI
+
+| Approach    | Best for                                                                 |
+| ----------- | ------------------------------------------------------------------------ |
+| **Recorder** | Exact replay of what you clicked; stable selectors from real DOM.       |
+| **AI flow**  | User-driven phrasing, many variants, same runtime (`runFlow`).          |
+| **Hand-written** | Assertions, `value: (prev) => ...`, custom `waitFor` conditions.   |
+
+You can combine them: record a skeleton, let AI fill `value`s, or post-process AI JSON to attach `assert` in code before running.
 
 ## Cursor visibility
 
@@ -525,7 +657,7 @@ const cursor = useVirtualCursor({
 
 **Flow**
 - `useCursorFlow(cursor)` — returns `{ run, cancel, running }`.
-- `runFlow(cursor, steps, options?)` — pure async runner, usable without React.
+- `runFlow(cursor, steps, options?)` — pure async runner, usable without React. Also the entry point for [AI-generated flows](#ai-generated-flows) (`JSON.parse` → `run(parsed.flow)`).
 - `describeStep(step)` — short label for logging / UI.
 - Flow types: `FlowStep`, `FlowRunOptions`, `FlowResult`, `StepEvent`, …
 - Persistence: `createSessionStoragePersistence`, `createLocalStoragePersistence`.
