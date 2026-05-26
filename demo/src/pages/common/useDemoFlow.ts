@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
-    applyStepEvent,
     useCursorFlow,
     useVirtualCursor,
     type FlowPersistence,
@@ -8,9 +7,9 @@ import {
     type FlowRunOptions,
     type FlowStep,
     type StepEvent,
-    type StepStatus,
     type UseVirtualCursorOptions,
 } from 'react-flowcase';
+import { applyStepEvent, type StepStatus } from '../../flow';
 
 /** Step types that show the cursor loading spinner. */
 const WAITING_STEP_TYPES = new Set<FlowStep['type']>(['waitFor', 'delay']);

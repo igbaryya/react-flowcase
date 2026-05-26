@@ -1,9 +1,6 @@
 import { useState } from 'react';
-import {
-    FlowRecorder,
-    generateFlowCode,
-    useFlowRecorder,
-} from 'react-flowcase';
+import { FlowRecorder, useFlowRecorder } from 'react-flowcase';
+import { generateFlowCode } from '../../flow';
 import { CodeBlock } from '../common/CodeBlock';
 import { ConceptCallout } from '../common/ConceptCallout';
 import './recorder-demo.css';

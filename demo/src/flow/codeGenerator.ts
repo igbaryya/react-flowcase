@@ -1,6 +1,9 @@
-import type { UseVirtualCursorOptions } from '../cursor/useVirtualCursor';
-import { describeElement } from '../cursor/target';
-import type { FlowRunOptions, FlowStep } from './types';
+import {
+    describeElement,
+    type FlowRunOptions,
+    type FlowStep,
+    type UseVirtualCursorOptions,
+} from 'react-flowcase';
 
 const INDENT = '    ';
 

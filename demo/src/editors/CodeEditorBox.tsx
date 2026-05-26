@@ -1,7 +1,3 @@
-import { highlight, languages } from 'prismjs';
-import 'prismjs/components/prism-clike';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-json';
 import type { ChangeEvent, CSSProperties } from 'react';
 import {
     codeEditorPreStyle,
@@ -9,14 +5,17 @@ import {
     flowcaseEditorLayoutCss,
     flowcasePrismCss,
 } from './codeEditorTheme';
+import { Prism } from './prismSetup';
 
 export type CodeEditorLanguage = 'javascript' | 'json';
 
 function highlightCode(code: string, language: CodeEditorLanguage): string {
     const grammar =
-        language === 'json' ? languages.json : languages.javascript;
+        language === 'json'
+            ? Prism.languages.json
+            : Prism.languages.javascript;
     if (!grammar) return code;
-    return highlight(code, grammar, language);
+    return Prism.highlight(code, grammar, language);
 }
 
 export interface CodeEditorBoxProps {

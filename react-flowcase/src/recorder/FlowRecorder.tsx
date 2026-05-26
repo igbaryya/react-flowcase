@@ -5,7 +5,7 @@ import {
     useState,
     type CSSProperties,
 } from 'react';
-import { generateFlowCode } from '../flow/codeGenerator';
+import { generateFlowCode } from './generateFlowCode';
 import { describeStep } from '../flow/types';
 import { InspectorOverlay } from './InspectorOverlay';
 import {

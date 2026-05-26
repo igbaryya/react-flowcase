@@ -1,6 +1,10 @@
 import { useEffect } from 'react';
 import type { CSSProperties } from 'react';
-import { describeStep, type FlowStep, type StepEvent } from './types';
+import {
+    describeStep,
+    type FlowStep,
+    type StepEvent,
+} from 'react-flowcase';
 
 export type StepStatus =
     | 'pending'

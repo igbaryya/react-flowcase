@@ -1,8 +1,10 @@
 # React Flowcase (`react-flowcase`)
 
-A React library for building visual, automated walkthroughs: a virtual cursor you can drive across the page, awaitable click/input primitives that surface async handler results back to your runner, a declarative flow-step API with cancellation, and drop-in UI for editing / visualizing / generating code from flows.
+A React library for building visual, automated walkthroughs: a virtual cursor you can drive across the page, awaitable click/input primitives that surface async handler results back to your runner, and a declarative flow-step API with cancellation.
 
 > Status: pre-1.0. APIs may change.
+
+**Live demo:** [igbaryya.github.io/react-flowcase](https://igbaryya.github.io/react-flowcase/)
 
 ## Install
 
@@ -482,26 +484,6 @@ interface FlowRunOptions {
 }
 ```
 
-## UI helpers
-
-All three are pure-presentational, fully styled inline (no CSS import needed):
-
-- `<FlowConfigViewer flow={...} editable onChange={...} />` — schema-driven, tabbed editor (**Overall** / **Flow** / **Run options**). Object props get their own tab (`flow`, `runOptions`); primitive cursor settings (`visibility`, `autoHide`) collapse into **Overall**. Tabs only render when their data is present. Supports add / delete / drag-to-reorder steps and edit per-step callbacks via `new Function(src)`. Pass `cursorOptions` + `onCursorOptionsChange` to enable the Overall tab.
-- `<FlowConfigModal open onClose ... />` — wraps the viewer in a native `<dialog>` with backdrop, Done/Reset buttons. Accepts every `FlowConfigViewer` prop.
-- `<FlowStepsIndicator flow={...} statuses={...} />` — compact vertical step list with `pending` / `running` (pulsing) / `success` (green ✓) / `failed` (red ✗) / `cancelled` (amber ⏸) icons. Drive it with:
-    ```ts
-    import { applyStepEvent } from 'react-flowcase';
-    const [statuses, setStatuses] = useState({});
-    run(flow, { onStepEvent: (e) => setStatuses((s) => applyStepEvent(s, e)) });
-    ```
-- `<FlowCodePreview flow={...} template="full" cursorOptions={...} renderCode={...} />` — generates a TypeScript source string (minimal or full component scaffold) from the live flow. When `cursorOptions` is passed, the `'full'` template emits them inside the generated `useVirtualCursor({...})` call. Pass `renderCode` to plug in any syntax highlighter (the library itself stays dependency-free).
-
-The pure code-generation helpers — `generateFlowCode()` and `generateFullExample()` — are exported separately if you want to skip the component shell.
-
-## Editing function values — security note
-
-`FlowConfigViewer`'s function editor evaluates user input via `new Function(...)`. This is appropriate for developer-facing tools (you're already running arbitrary handlers you wrote) but **must not** be exposed to untrusted user input. There is no sandbox.
-
 ## API surface
 
 **Cursor**
@@ -514,7 +496,7 @@ The pure code-generation helpers — `generateFlowCode()` and `generateFullExamp
 
     Pass `loading={true}` to show a spinning loader beside the cursor — use this during `waitFor` or `delay` steps to indicate the automation is waiting. The loader renders at the bottom-right of the cursor.
 
-    For settings-driven cursor swaps (URL editable from a UI), use the `appearance` option on `useVirtualCursor` instead — see below.
+    To swap the cursor image at runtime, use the `appearance` option on `useVirtualCursor` — see below.
 
 ### Editable cursor via `appearance`
 
@@ -524,7 +506,7 @@ The pure code-generation helpers — `generateFlowCode()` and `generateFullExamp
 const cursor = useVirtualCursor({
     visibility: 'onStart',
     autoHide: true,
-    appearance: '/icons/aim.svg', // editable from the settings modal
+    appearance: '/icons/aim.svg',
 });
 
 <VirtualCursor
@@ -534,7 +516,7 @@ const cursor = useVirtualCursor({
 />
 ```
 
-Because `appearance` is a primitive string in `UseVirtualCursorOptions`, the `FlowConfigViewer` / `FlowConfigModal` **Overall** tab renders it as an editable text input out of the box — users can paste any URL (including `data:image/svg+xml;base64,...`) to swap the cursor live. For richer cursors (ReactNode / render function), pass the `cursor` prop to `<VirtualCursor>` directly.
+`appearance` is a string (URL or `data:` URL). Update it from React state whenever you want a different image. For richer cursors (ReactNode or a render function), pass the `cursor` prop to `<VirtualCursor>` instead.
 - `useVirtualCursor(options?)` — owns position/visibility, exposes `moveTo(x, y, opts?)` and `moveToElement(id, opts?)`. Options: `initial`, `visibility`, `autoHide` (see [Cursor visibility](#cursor-visibility)). `opts` accepts `signal` for cancellation.
 
 **Awaitable events**
@@ -544,10 +526,9 @@ Because `appearance` is a primitive string in `UseVirtualCursorOptions`, the `Fl
 **Flow**
 - `useCursorFlow(cursor)` — returns `{ run, cancel, running }`.
 - `runFlow(cursor, steps, options?)` — pure async runner, usable without React.
-- `FlowConfigViewer`, `FlowConfigModal`, `FlowStepsIndicator`, `FlowCodePreview` — UI components.
-- `generateFlowCode`, `generateFullExample` — pure source generators.
-- `applyStepEvent` — reducer that maps a `StepEvent` to a `Record<index, StepStatus>`.
-- `STEP_TYPES`, `STEP_SCHEMAS`, `RUN_OPTIONS_SCHEMA`, `createDefaultStep` — registry powering the generic editor.
+- `describeStep(step)` — short label for logging / UI.
+- Flow types: `FlowStep`, `FlowRunOptions`, `FlowResult`, `StepEvent`, …
+- Persistence: `createSessionStoragePersistence`, `createLocalStoragePersistence`.
 
 **Recorder (dev mode)**
 - `<FlowRecorder />` — floating dev-mode panel with record / inspect / copy. Mount once, gated on `import.meta.env.DEV`. See [Recording flows in dev mode](#recording-flows-in-dev-mode).
@@ -588,15 +569,6 @@ The default `visibility` is now `'onStart'` (was always visible). If you want th
 const cursor = useVirtualCursor({ visibility: 'always' });
 ```
 
-### `STEP_SCHEMAS` / `RUN_OPTIONS_SCHEMA` shape change
-
-These exports moved from `ReadonlyArray<string>` to `ReadonlyArray<ConfigPropSchema>` (so prop metadata like `enumValues` and `valueKinds` can travel with the key). If you iterate them, switch from `key` to `schema.key`:
-
-```diff
-- STEP_SCHEMAS.click.map((key) => render(key, step[key]))
-+ STEP_SCHEMAS.click.map((schema) => render(schema.key, step[schema.key]))
-```
-
 ### `ClickStep.wait` is now `boolean | number`
 
 Existing boolean usage is unchanged. To bound a stuck handler, pass `number` (ms):
@@ -605,7 +577,7 @@ Existing boolean usage is unchanged. To bound a stuck handler, pass `number` (ms
 { type: 'click', element: '#submit', wait: 5000 } // fail after 5s
 ```
 
-When the timeout fires, the step resolves to `failure.reason === 'timeout'` (or skips on `moveOnFailure`). `onStepEvent` fires `phase: 'timeout'`. The `FlowStepsIndicator` shows it as a distinct **timeout** status (clock icon, amber).
+When the timeout fires, the step resolves to `failure.reason === 'timeout'` (or skips on `moveOnFailure`). `onStepEvent` fires with `phase: 'timeout'`.
 
 ### `elementId` → `element` + flexible targets
 

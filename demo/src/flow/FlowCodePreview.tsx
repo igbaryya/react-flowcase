@@ -5,8 +5,11 @@ import {
     generateFullExample,
     type GenerateFlowCodeOptions,
 } from './codeGenerator';
-import type { UseVirtualCursorOptions } from '../cursor/useVirtualCursor';
-import type { FlowRunOptions, FlowStep } from './types';
+import type {
+    FlowRunOptions,
+    FlowStep,
+    UseVirtualCursorOptions,
+} from 'react-flowcase';
 
 export type FlowCodeTemplate = 'minimal' | 'full';
 

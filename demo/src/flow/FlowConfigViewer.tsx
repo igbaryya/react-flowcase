@@ -5,8 +5,14 @@ import type {
     ChangeEvent,
     ReactNode,
 } from 'react';
-import type { UseVirtualCursorOptions } from '../cursor/useVirtualCursor';
-import { PropCell, type MsSliderConfig, type PropValueKind, type PropValueType } from './PropEditor';
+import type { UseVirtualCursorOptions } from 'react-flowcase';
+import {
+    PropCell,
+    type MsSliderConfig,
+    type PropEditorRenderFn,
+    type PropValueKind,
+    type PropValueType,
+} from './PropEditor';
 import { PropHelpTooltip } from './PropHelpTooltip';
 import {
     CURSOR_OPTIONS_SCHEMA,
@@ -14,10 +20,13 @@ import {
     STEP_SCHEMAS,
     STEP_TYPES,
     createDefaultStep,
-    type JsonObjectEditorConfig,
     type StepType,
 } from './stepDefaults';
-import { describeStep, type FlowRunOptions, type FlowStep } from './types';
+import {
+    describeStep,
+    type FlowRunOptions,
+    type FlowStep,
+} from 'react-flowcase';
 
 export type ConfigTabId = 'overall' | 'flow' | 'runOptions';
 
@@ -62,6 +71,10 @@ export interface FlowConfigViewerProps {
      * this slot (e.g. Monaco in the demo app).
      */
     renderFlowJsonEditor?: (props: FlowJsonEditorRenderProps) => ReactNode;
+    /**
+     * Optional slot for rich function / JSON object prop editors (e.g. Prism in the demo).
+     */
+    renderPropEditor?: PropEditorRenderFn;
 }
 
 const STEP_COLORS: Record<
@@ -397,7 +410,6 @@ interface PropsGridEntry {
     enumValues?: ReadonlyArray<string>;
     valueKinds?: ReadonlyArray<PropValueKind>;
     msSlider?: MsSliderConfig;
-    jsonObject?: JsonObjectEditorConfig;
 }
 
 function getStepEntries(
@@ -414,7 +426,6 @@ function getStepEntries(
             enumValues: schema.enumValues,
             valueKinds: schema.valueKinds,
             msSlider: schema.msSlider,
-            jsonObject: schema.jsonObject,
         }));
     }
     return Object.entries(step)
@@ -429,7 +440,6 @@ function getStepEntries(
                 enumValues: meta?.enumValues,
                 valueKinds: meta?.valueKinds,
                 msSlider: meta?.msSlider,
-                jsonObject: meta?.jsonObject,
             };
         });
 }
@@ -478,6 +488,7 @@ interface PropsGridProps {
     editable: boolean;
     idPrefix?: string;
     onPropChange?: (key: string, value: unknown) => void;
+    renderPropEditor?: PropEditorRenderFn;
 }
 
 function PropsGrid({
@@ -485,6 +496,7 @@ function PropsGrid({
     editable,
     idPrefix = '',
     onPropChange,
+    renderPropEditor,
 }: PropsGridProps) {
     if (entries.length === 0) return null;
     return (
@@ -498,7 +510,6 @@ function PropsGrid({
                     enumValues,
                     valueKinds,
                     msSlider,
-                    jsonObject,
                 }) => (
                         <div
                             key={`${idPrefix}${key}`}
@@ -517,13 +528,14 @@ function PropsGrid({
                             </span>
                             <span style={styles.propValue}>
                                 <PropCell
+                                    propKey={key}
                                     value={value}
                                     editable={editable}
                                     valueType={valueType}
                                     enumValues={enumValues}
                                     valueKinds={valueKinds}
                                     msSlider={msSlider}
-                                    jsonObject={jsonObject}
+                                    renderPropEditor={renderPropEditor}
                                     onChange={(next) =>
                                         onPropChange?.(key, next)
                                     }
@@ -552,6 +564,7 @@ interface StepCardProps {
     onDragLeave?: () => void;
     onDrop?: (e: ReactDragEvent<HTMLDivElement>) => void;
     draggable: boolean;
+    renderPropEditor?: PropEditorRenderFn;
 }
 
 function StepCard({
@@ -570,6 +583,7 @@ function StepCard({
     onDragLeave,
     onDrop,
     draggable,
+    renderPropEditor,
 }: StepCardProps) {
     const colors = STEP_COLORS[step.type];
     const entries = getStepEntries(step, editable);
@@ -621,6 +635,7 @@ function StepCard({
                 editable={editable}
                 idPrefix={`step-${index}-`}
                 onPropChange={onPropChange}
+                renderPropEditor={renderPropEditor}
             />
         </div>
     );
@@ -746,6 +761,7 @@ export function FlowConfigViewer({
     className,
     style,
     renderFlowJsonEditor,
+    renderPropEditor,
 }: FlowConfigViewerProps) {
     const isStepEditable = editable && typeof onChange === 'function';
     const isRunOptionsEditable =
@@ -963,6 +979,7 @@ export function FlowConfigViewer({
                                 editable={isCursorOptionsEditable}
                                 idPrefix="cursor-"
                                 onPropChange={handleCursorOptionChange}
+                                renderPropEditor={renderPropEditor}
                             />
                         </div>
                     ) : (
@@ -999,6 +1016,7 @@ export function FlowConfigViewer({
                             step={step}
                             index={idx}
                             editable={isStepEditable}
+                            renderPropEditor={renderPropEditor}
                             isDragging={draggedIndex === idx}
                             isDropTarget={
                                 dragOverIndex === idx &&
@@ -1044,6 +1062,7 @@ export function FlowConfigViewer({
                                 editable={isRunOptionsEditable}
                                 idPrefix="run-"
                                 onPropChange={handleRunOptionChange}
+                                renderPropEditor={renderPropEditor}
                             />
                         </div>
                     ) : (

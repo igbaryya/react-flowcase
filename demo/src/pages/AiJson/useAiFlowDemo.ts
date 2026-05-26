@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-    applyStepEvent,
     useCursorFlow,
     useVirtualCursor,
     type FlowResult,
     type FlowStep,
     type StepEvent,
-    type StepStatus,
 } from 'react-flowcase';
+import { applyStepEvent, type StepStatus } from '../../flow';
 import { createFlowRunOptions } from '../common/createFlowRunOptions';
 import { DEFAULT_CURSOR_OPTIONS } from '../common/useDemoFlow';
 import {

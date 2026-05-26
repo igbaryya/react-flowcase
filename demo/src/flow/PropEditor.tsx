@@ -4,10 +4,29 @@ import type {
     CSSProperties,
     ReactNode,
 } from 'react';
-import { CodeEditorBox } from './CodeEditorBox';
-import { formatFunctionSource } from './functionSource';
-import { JsonObjectEditor } from './JsonObjectEditor';
-import type { JsonObjectEditorConfig } from './stepDefaults';
+
+export interface PropEditorRenderProps {
+    propKey: string;
+    value: unknown;
+    valueType?: PropValueType;
+    editable: boolean;
+    onChange: (next: unknown) => void;
+}
+
+export type PropEditorRenderFn = (props: PropEditorRenderProps) => ReactNode;
+
+function formatFunctionSource(fn: (...args: unknown[]) => unknown): string {
+    return fn.toString();
+}
+
+function wantsRichPropEditor(
+    valueType: PropValueType | undefined,
+    value: unknown,
+): boolean {
+    if (valueType === 'function' || valueType === 'object') return true;
+    if (typeof value === 'function') return true;
+    return typeof value === 'object' && value !== null;
+}
 
 export const propEditorStyles = {
     textInput: {
@@ -429,18 +448,86 @@ function FunctionEditor({
 
     return (
         <div style={propEditorStyles.codeEditorWrap}>
-            <CodeEditorBox
+            <textarea
+                style={propEditorStyles.textarea}
                 value={source}
-                onChange={setSource}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                    setSource(e.target.value)
+                }
                 onBlur={handleBlur}
-                language="javascript"
                 placeholder="(prev) => 'derived value'"
-                minHeight={88}
-                maxHeight={240}
+                spellCheck={false}
             />
             {error ? <div style={propEditorStyles.error}>{error}</div> : null}
             <span style={propEditorStyles.helpText}>
                 Evaluated on blur. Functions only.
+            </span>
+        </div>
+    );
+}
+
+function ObjectTextareaEditor({
+    value,
+    onChange,
+}: {
+    value: unknown;
+    onChange: (next: unknown) => void;
+}) {
+    const [text, setText] = useState(() =>
+        value === undefined
+            ? ''
+            : JSON.stringify(
+                  value,
+                  (_key, v) => (typeof v === 'function' ? undefined : v),
+                  2,
+              ),
+    );
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        setText(
+            value === undefined
+                ? ''
+                : JSON.stringify(
+                      value,
+                      (_key, v) =>
+                          typeof v === 'function' ? undefined : v,
+                      2,
+                  ),
+        );
+        setError(null);
+    }, [value]);
+
+    const handleBlur = () => {
+        const trimmed = text.trim();
+        if (trimmed === '') {
+            setError(null);
+            if (value !== undefined) onChange(undefined);
+            return;
+        }
+        try {
+            onChange(JSON.parse(trimmed) as unknown);
+            setError(null);
+        } catch (e) {
+            setError(e instanceof Error ? e.message : String(e));
+        }
+    };
+
+    return (
+        <div style={propEditorStyles.codeEditorWrap}>
+            <textarea
+                style={propEditorStyles.textarea}
+                value={text}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                    setText(e.target.value)
+                }
+                onBlur={handleBlur}
+                placeholder='{ "duration": 600 }'
+                spellCheck={false}
+            />
+            {error ? <div style={propEditorStyles.error}>{error}</div> : null}
+            <span style={propEditorStyles.helpText}>
+                JSON object or array. Applies on blur.
             </span>
         </div>
     );
@@ -532,6 +619,7 @@ function UnionEditor({
 }
 
 export interface PropCellProps {
+    propKey?: string;
     value: unknown;
     editable: boolean;
     onChange?: (next: unknown) => void;
@@ -539,10 +627,11 @@ export interface PropCellProps {
     valueType?: PropValueType;
     valueKinds?: ReadonlyArray<PropValueKind>;
     msSlider?: MsSliderConfig;
-    jsonObject?: JsonObjectEditorConfig;
+    renderPropEditor?: PropEditorRenderFn;
 }
 
 export function PropCell({
+    propKey,
     value,
     editable,
     onChange,
@@ -550,7 +639,7 @@ export function PropCell({
     valueType,
     valueKinds,
     msSlider,
-    jsonObject,
+    renderPropEditor,
 }: PropCellProps): ReactNode {
     if (editable && valueKinds && valueKinds.length > 0) {
         return (
@@ -616,6 +705,20 @@ export function PropCell({
         );
     }
 
+    if (
+        renderPropEditor &&
+        propKey &&
+        wantsRichPropEditor(valueType, value)
+    ) {
+        return renderPropEditor({
+            propKey,
+            value,
+            valueType,
+            editable,
+            onChange: (next) => onChange?.(next),
+        });
+    }
+
     if (editable && valueType === 'function') {
         return (
             <FunctionEditor
@@ -631,10 +734,9 @@ export function PropCell({
 
     if (editable && valueType === 'object') {
         return (
-            <JsonObjectEditor
+            <ObjectTextareaEditor
                 value={value}
                 onChange={(next) => onChange?.(next)}
-                config={jsonObject}
             />
         );
     }
@@ -649,36 +751,27 @@ export function PropCell({
             );
         }
         return (
-            <CodeEditorBox
-                value={formatFunctionSource(
+            <pre style={propEditorStyles.readonlyBlock}>
+                {formatFunctionSource(
                     value as (...args: unknown[]) => unknown,
                 )}
-                onChange={() => {}}
-                language="javascript"
-                readOnly
-                shellStyle={propEditorStyles.readonlyCodeShell}
-            />
+            </pre>
         );
     }
 
     if (typeof value === 'object' && value !== null) {
         if (editable) {
             return (
-                <JsonObjectEditor
+                <ObjectTextareaEditor
                     value={value}
                     onChange={(next) => onChange?.(next)}
-                    config={jsonObject}
                 />
             );
         }
         return (
-            <CodeEditorBox
-                value={JSON.stringify(value, null, 2)}
-                onChange={() => {}}
-                language="json"
-                readOnly
-                shellStyle={propEditorStyles.readonlyCodeShell}
-            />
+            <pre style={propEditorStyles.readonlyBlock}>
+                {JSON.stringify(value, null, 2)}
+            </pre>
         );
     }
 

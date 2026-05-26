@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { FlowStepsIndicator, VirtualCursor } from 'react-flowcase';
+import { VirtualCursor } from 'react-flowcase';
+import { FlowStepsIndicator } from '../../flow';
 import { useDemoFlow } from '../common/useDemoFlow';
 import {
     loginAutomationHref,

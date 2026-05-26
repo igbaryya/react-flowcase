@@ -1,15 +1,18 @@
 import { Children, isValidElement, useMemo, useState, type ReactNode } from 'react';
 import {
-    FlowConfigModal,
-    FlowStepsIndicator,
     VirtualCursor,
     describeStep,
-    generateFullExample,
     type CursorSource,
 } from 'react-flowcase';
+import {
+    FlowConfigModal,
+    FlowStepsIndicator,
+    generateFullExample,
+} from '../../flow';
 import { CodeBlock } from './CodeBlock';
 import { ConceptCallout } from './ConceptCallout';
 import { DemoPageHeader } from './DemoPageHeader';
+import { DemoPropEditor } from '../../editors/DemoPropEditor';
 import { FlowJsonMonacoEditor } from './FlowJsonMonacoEditor';
 import { JsonReadonlyViewer } from './JsonReadonlyViewer';
 import { PlayIcon, StopIcon } from './icons';
@@ -282,6 +285,7 @@ export function DemoPageShell({
                 renderFlowJsonEditor={(props) => (
                     <FlowJsonMonacoEditor {...props} />
                 )}
+                renderPropEditor={(props) => <DemoPropEditor {...props} />}
             />
 
             <VirtualCursor

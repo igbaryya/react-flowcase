@@ -1,8 +1,5 @@
-import {
-    FlowStepsIndicator,
-    VirtualCursor,
-    describeStep,
-} from 'react-flowcase';
+import { VirtualCursor, describeStep } from 'react-flowcase';
+import { FlowStepsIndicator } from '../../flow';
 import { ConceptCallout } from '../common/ConceptCallout';
 import { CodeBlock } from '../common/CodeBlock';
 import { JsonReadonlyViewer } from '../common/JsonReadonlyViewer';

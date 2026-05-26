@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { CodeEditorBox } from './CodeEditorBox';
-import type { JsonObjectEditorConfig } from './stepDefaults';
+import type { JsonObjectEditorConfig } from './propEditorConfig';
 
 const toolbarStyles = {
     wrap: {

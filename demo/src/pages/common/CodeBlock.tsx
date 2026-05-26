@@ -39,7 +39,7 @@ function languageLabel(language: string): string {
 
 /**
  * Demo-side Prism renderer with chrome, syntax highlighting, and copy.
- * Plug into `<FlowCodePreview renderCode={...} />` from the library.
+ * Plug into `<FlowCodePreview renderCode={...} />` in the demo flow UI.
  */
 export function CodeBlock({
     code,

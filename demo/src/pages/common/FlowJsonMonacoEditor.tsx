@@ -1,6 +1,6 @@
 import Editor, { type OnMount } from '@monaco-editor/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { FlowJsonEditorRenderProps } from 'react-flowcase';
+import type { FlowJsonEditorRenderProps } from '../../flow';
 import { flowToJsonText, parseFlowJsonText } from './flowJson';
 import './flow-json-editor.css';
 
