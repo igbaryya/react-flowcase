@@ -1,0 +1,55 @@
+{
+    "name": "react-flowcase",
+    "version": "0.1.0",
+    "description": "Visual cursor + awaitable click/input primitives for building automated walkthroughs, onboarding tours, and demo flows in React apps.",
+    "type": "module",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "sideEffects": false,
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "typecheck": "tsc --noEmit",
+        "clean": "rm -rf dist"
+    },
+    "peerDependencies": {
+        "react": "^18.0.0 || ^19.0.0",
+        "react-dom": "^18.0.0 || ^19.0.0"
+    },
+    "devDependencies": {
+        "@types/react": "^19.2.14",
+        "@types/react-dom": "^19.2.3",
+        "react": "^19.2.6",
+        "react-dom": "^19.2.6",
+        "tsup": "^8.3.0",
+        "typescript": "~6.0.2"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "keywords": [
+        "react",
+        "flowcase",
+        "flow",
+        "cursor",
+        "walkthrough",
+        "tour",
+        "onboarding",
+        "demo",
+        "e2e"
+    ],
+    "license": "MIT"
+}

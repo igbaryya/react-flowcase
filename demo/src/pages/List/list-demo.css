@@ -1,0 +1,102 @@
+.todo-card {
+    display: grid;
+    gap: 16px;
+}
+
+.todo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.todo-header h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.todo-meta {
+    color: var(--text-dim);
+    font-size: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.todo-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.todo-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition:
+        background 0.15s,
+        border-color 0.15s,
+        opacity 0.18s;
+}
+
+.todo-item.done {
+    opacity: 0.55;
+}
+
+.todo-item.done .todo-text {
+    text-decoration: line-through;
+    color: var(--text-dim);
+}
+
+.todo-toggle {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+
+.todo-text {
+    color: var(--text);
+    font-size: 14px;
+}
+
+.todo-add-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.todo-input {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 11px;
+    outline: none;
+    transition: border-color 0.15s;
+    color: var(--text);
+}
+
+.todo-input:focus {
+    border-color: var(--accent);
+}
+
+.todo-hint {
+    color: var(--text-dim);
+    font-size: 12px;
+    align-self: center;
+}
+
+.todo-hint code {
+    color: var(--accent);
+    background: rgba(106, 169, 255, 0.1);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+}

@@ -1,0 +1,13 @@
+{
+    "extends": "../tsconfig.base.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
+        "moduleDetection": "force",
+        "types": ["vite/client"],
+        "paths": {
+            "react-flowcase": ["../react-flowcase/src/index.ts"]
+        }
+    },
+    "include": ["src"]
+}
