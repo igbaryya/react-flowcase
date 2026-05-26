@@ -1,6 +1,6 @@
 {
     "name": "react-flowcase",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "description": "Visual cursor + awaitable click/input primitives for building automated walkthroughs, onboarding tours, and demo flows in React apps.",
     "type": "module",
     "main": "./dist/index.cjs",
