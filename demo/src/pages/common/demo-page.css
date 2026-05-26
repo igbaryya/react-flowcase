@@ -1,17 +1,28 @@
 .demo-page {
     display: grid;
-    /* minmax(0, …) on both tracks: aside cannot grow past 360px into the form column */
-    grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-        'header  header'
-        'concept concept'
-        'form    aside'
-        'results results'
-        'extra   extra'
-        'code    code';
-    column-gap: 24px;
+        'header'
+        'concept'
+        'playground'
+        'results'
+        'extra'
+        'code';
     row-gap: 24px;
     align-items: start;
+    min-width: 0;
+    overflow-x: clip;
+}
+
+/* Form + Flow Steps share one row; overflow clips sticky so it cannot paint over results/code below */
+.demo-page-playground {
+    grid-area: playground;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+    column-gap: 24px;
+    align-items: start;
+    min-width: 0;
+    overflow: clip;
 }
 
 .demo-page-header-row {
@@ -25,18 +36,13 @@
 }
 
 .demo-page-form {
-    grid-area: form;
     display: flex;
     flex-direction: column;
     gap: 24px;
     min-width: 0;
-    /* Keep the form column’s right edge as the boundary sticky aside must not cross */
-    position: relative;
-    z-index: 1;
 }
 
 .demo-page-aside {
-    grid-area: aside;
     align-self: start;
     justify-self: stretch;
     position: sticky;
@@ -47,8 +53,11 @@
     min-width: 0;
     max-width: 360px;
     width: 100%;
+    max-height: calc(100vh - 48px);
     overflow-x: clip;
+    overflow-y: auto;
     box-sizing: border-box;
+    isolation: isolate;
 }
 
 .demo-page-aside .demo-card.indicator-card {
@@ -73,21 +82,16 @@
 }
 
 @media (max-width: 1100px) {
-    .demo-page {
+    .demo-page-playground {
         grid-template-columns: minmax(0, 1fr);
-        grid-template-areas:
-            'header'
-            'concept'
-            'form'
-            'aside'
-            'results'
-            'extra'
-            'code';
+        row-gap: 24px;
     }
     .demo-page-aside {
         position: static;
         align-self: auto;
         max-width: none;
+        max-height: none;
+        overflow-y: visible;
     }
 }
 

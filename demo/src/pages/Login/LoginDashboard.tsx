@@ -52,47 +52,49 @@ export function LoginDashboard() {
                 </div>
             </div>
 
-            <div className="demo-page-form">
-                <div className="demo-card">
-                    <div className="status success">
-                        Signed in as {session.email}
+            <div className="demo-page-playground">
+                <div className="demo-page-form">
+                    <div className="demo-card">
+                        <div className="status success">
+                            Signed in as {session.email}
+                        </div>
+                        <p className="demo-dashboard-meta">
+                            Session started at{' '}
+                            {new Date(session.signedInAt).toLocaleString()}
+                        </p>
+                        <div className="demo-actions">
+                            <button
+                                id="signout-btn"
+                                type="button"
+                                className="btn"
+                                onClick={() => navigateToLoginForm()}
+                            >
+                                Sign out
+                            </button>
+                        </div>
                     </div>
-                    <p className="demo-dashboard-meta">
-                        Session started at{' '}
-                        {new Date(session.signedInAt).toLocaleString()}
-                    </p>
-                    <div className="demo-actions">
-                        <button
-                            id="signout-btn"
-                            type="button"
-                            className="btn"
-                            onClick={() => navigateToLoginForm()}
-                        >
-                            Sign out
-                        </button>
+
+                    <div className="demo-card">
+                        <div className="demo-row">
+                            <label>Current URL</label>
+                            <output className="demo-url-readout">
+                                {window.location.pathname}
+                                {window.location.search}
+                            </output>
+                        </div>
                     </div>
                 </div>
 
-                <div className="demo-card">
-                    <div className="demo-row">
-                        <label>Current URL</label>
-                        <output className="demo-url-readout">
-                            {window.location.pathname}
-                            {window.location.search}
-                        </output>
+                <aside className="demo-page-aside">
+                    <div className="demo-card indicator-card">
+                        <FlowStepsIndicator
+                            flow={flow}
+                            statuses={stepStatuses}
+                            title="Flow steps"
+                        />
                     </div>
-                </div>
+                </aside>
             </div>
-
-            <aside className="demo-page-aside">
-                <div className="demo-card indicator-card">
-                    <FlowStepsIndicator
-                        flow={flow}
-                        statuses={stepStatuses}
-                        title="Flow steps"
-                    />
-                </div>
-            </aside>
 
             <VirtualCursor
                 position={cursor.position}

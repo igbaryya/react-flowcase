@@ -124,8 +124,8 @@ const styles = {
     } as CSSProperties,
     row: (s: StepStatus): CSSProperties => ({
         display: 'flex',
-        alignItems: 'center',
-        gap: 10,
+        alignItems: 'flex-start',
+        gap: 8,
         minWidth: 0,
         maxWidth: '100%',
         padding: '8px 10px',
@@ -135,6 +135,20 @@ const styles = {
         color: 'inherit',
         transition: 'background 0.2s, border-color 0.2s',
     }),
+    rowMain: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 4,
+        flex: 1,
+        minWidth: 0,
+    } as CSSProperties,
+    rowMeta: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        minWidth: 0,
+        flexWrap: 'wrap',
+    } as CSSProperties,
     badge: (color: string): CSSProperties => ({
         background: 'transparent',
         color,
@@ -155,13 +169,12 @@ const styles = {
         fontSize: 11,
     } as CSSProperties,
     elementId: {
-        flex: 1,
         minWidth: 0,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
+        overflowWrap: 'anywhere',
+        wordBreak: 'break-word',
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
         fontSize: 11,
+        lineHeight: 1.35,
         opacity: 0.85,
     } as CSSProperties,
     iconWrap: (s: StepStatus): CSSProperties => ({
@@ -342,17 +355,21 @@ export function FlowStepsIndicator({
                             <span style={styles.iconWrap(s)}>
                                 <StatusIcon status={s} />
                             </span>
-                            <span style={styles.index}>{idx + 1}</span>
-                            <span
-                                style={styles.badge(
-                                    STEP_TYPE_COLOR[step.type],
-                                )}
-                            >
-                                {step.type}
-                            </span>
-                            <span style={styles.elementId}>
-                                {describeStep(step)}
-                            </span>
+                            <div style={styles.rowMain}>
+                                <div style={styles.rowMeta}>
+                                    <span style={styles.index}>{idx + 1}</span>
+                                    <span
+                                        style={styles.badge(
+                                            STEP_TYPE_COLOR[step.type],
+                                        )}
+                                    >
+                                        {step.type}
+                                    </span>
+                                </div>
+                                <span style={styles.elementId}>
+                                    {describeStep(step)}
+                                </span>
+                            </div>
                         </div>
                     );
                 })}

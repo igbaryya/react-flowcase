@@ -197,17 +197,19 @@ export function DemoPageShell({
                 <div className="demo-page-concept">{resolvedConcept}</div>
             ) : null}
 
-            <div className="demo-page-form">{resolvedChildren}</div>
+            <div className="demo-page-playground">
+                <div className="demo-page-form">{resolvedChildren}</div>
 
-            <aside className="demo-page-aside">
-                <div className="demo-card indicator-card">
-                    <FlowStepsIndicator
-                        flow={flow}
-                        statuses={stepStatuses}
-                        title="Flow steps"
-                    />
-                </div>
-            </aside>
+                <aside className="demo-page-aside">
+                    <div className="demo-card indicator-card">
+                        <FlowStepsIndicator
+                            flow={flow}
+                            statuses={stepStatuses}
+                            title="Flow steps"
+                        />
+                    </div>
+                </aside>
+            </div>
 
             {resultsNode ? (
                 <div className="demo-page-results">{resultsNode}</div>
